@@ -3,24 +3,22 @@
 # Declare variables to be passed into your templates.
 
 # This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
-replicaCount: 1
+replicaCount: 3
 
 image:
   repository: aadan1lov/muffin-currency
   tag: "1.0.0"
   pullPolicy: IfNotPresent
 
-# This is for the secrets for pulling an image from a private repository more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/pull-image-private-registry/
-imagePullSecrets: []
 # This is to override the chart name.
 nameOverride: "mufficin-currency"
 fullnameOverride: "muffin-currency-chart"
 
 
 service:
-  type: ClusterIP
+  type: LoadBalancer
   port: 8083
-  targetPort: 8080
+  portName: http
 
 containerPort: 8080
 
