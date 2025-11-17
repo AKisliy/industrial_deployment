@@ -1,0 +1,66 @@
+# Default values for muffin-wallet.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# This will set the replicaset count more information can be found here: https://kubernetes.io/docs/concepts/workloads/controllers/replicaset/
+replicaCount: 2
+
+# This sets the container image more information can be found here: https://kubernetes.io/docs/concepts/containers/images/
+image:
+  repository: aadan1lov/muffin-wallet
+  # This sets the pull policy for images.
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "1.1.0"
+
+# This is to override the chart name.
+nameOverride: ""
+fullnameOverride: ""
+
+# This sets the container port
+containerPort: 8081
+
+# This is for setting up a service more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/
+service:
+  # This sets the service type more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services-service-types
+  type: ClusterIP
+  # This sets the ports more information can be found here: https://kubernetes.io/docs/concepts/services-networking/service/#field-spec-ports
+  port: 8081
+  portName: http
+
+# This block is for setting up the ingress for more information can be found here: https://kubernetes.io/docs/concepts/services-networking/ingress/
+ingress:
+  className: nginx
+  hosts:
+    - host: muffin-wallet.com
+      paths:
+        - path: /
+          pathType: Prefix
+
+# This is to setup the liveness and readiness probes more information can be found here: https://kubernetes.io/docs/tasks/configure-pod-container/configure-liveness-readiness-startup-probes/
+livenessProbe:
+  httpGet:
+    path: /actuator/health/liveness
+    port: 8081
+    portName: http
+  initialDelaySeconds: 60
+  periodSeconds: 5
+readinessProbe:
+  httpGet:
+    path: /actuator/health/readiness
+    port: 8081
+    portName: http
+  initialDelaySeconds: 5
+  periodSeconds: 10
+
+
+# Additional volumes on the output Deployment definition.
+volumes: 
+  - name: application-config-volume
+    configMap:
+      name: muffin-wallet
+
+# Additional volumeMounts on the output Deployment definition.
+volumeMounts: 
+  - name: application-config-volume
+    mountPath: /app/config

@@ -16,7 +16,7 @@ fullnameOverride: "muffin-currency-chart"
 
 
 service:
-  type: LoadBalancer
+  type: ClusterIP
   port: 8083
   portName: http
 
