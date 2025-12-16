@@ -1,0 +1,56 @@
+replicaCount: 1
+
+image:
+  repository: aadan1lov/muffin-wallet
+  pullPolicy: IfNotPresent
+  tag: "1.1.0"
+
+nameOverride: ""
+fullnameOverride: ""
+
+containerPort: 8081
+
+service:
+  type: ClusterIP
+  port: 8081
+  portName: http
+
+ingress:
+  className: nginx
+  hosts:
+    - host: bighw.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    - hosts:
+        - bighw.com
+      secretName: muffin-tls
+
+livenessProbe:
+  httpGet:
+    path: /actuator/health/liveness
+    port: 8081
+    portName: http
+  initialDelaySeconds: 60
+  periodSeconds: 5
+readinessProbe:
+  httpGet:
+    path: /actuator/health/readiness
+    port: 8081
+    portName: http
+  initialDelaySeconds: 5
+  periodSeconds: 10
+
+volumes: 
+  - name: application-config-volume
+    configMap:
+      name: muffin-wallet
+
+volumeMounts: 
+  - name: application-config-volume
+    mountPath: /app/config
+  
+serviceAccount:
+  create: true
+  name: "muffin-wallet-sa"

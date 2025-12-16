@@ -1,0 +1,18 @@
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: muffin-currency-internal-vs
+spec:
+  hosts:
+  - "muffin-currency.bighw.svc.cluster.local"
+  http:
+  - route:
+    - destination:
+        host: muffin-currency
+        port:
+          number: 8083
+    timeout: 2s
+    retries:
+      attempts: 3
+      perTryTimeout: 2s
+      retryOn: gateway-error,connect-failure,refused-stream,5xx

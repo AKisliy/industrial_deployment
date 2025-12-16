@@ -1,0 +1,27 @@
+environments:
+  devel:
+    values:
+      - charts:
+          versions:
+            muffinCurrency: 0.1.0
+            muffinWallet: 0.1.0
+---
+releases:
+  - name: muffin-currency
+    labels:
+      app: muffin-currency
+    wait: true
+    chart: ./muffin-currency
+    version: "{{ .Values.charts.versions.muffinCurrency }}"
+    values:
+      - envs/{{ .Environment.Name }}/values/muffin-currency.yaml
+  - name: muffin-wallet
+    labels:
+      app: muffin-wallet
+    wait: true
+    chart: ./muffin-wallet
+    version: "{{ .Values.charts.versions.muffinWallet }}"
+    needs:
+      - muffin-currency
+    values:
+      - envs/{{ .Environment.Name }}/values/muffin-wallet.yaml

@@ -14,6 +14,7 @@ spec:
       labels:
         {{- include "muffin-wallet.labels" . | nindent 8 }}
     spec:
+      serviceAccountName: {{ .Values.serviceAccount.name | default "default" }}
       containers:
         - name: {{ include "muffin-wallet.name" . }}
           image:  "{{ .Values.image.repository }}:{{ .Values.image.tag }}"

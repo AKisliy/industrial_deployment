@@ -1,0 +1,13 @@
+apiVersion: networking.istio.io/v1
+kind: ServiceEntry
+metadata:
+  name: postgres-external
+spec:
+  hosts:
+  - host.minikube.internal
+  ports:
+  - number: 54321       
+    name: tcp-postgres
+    protocol: TCP       
+  resolution: DNS
+  location: MESH_EXTERNAL

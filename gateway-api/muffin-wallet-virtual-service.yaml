@@ -1,0 +1,19 @@
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: muffin-wallet-vs
+spec:
+  hosts:
+  - "bighw.com"
+  gateways:
+  - muffin-gateway
+  http:
+  - match:
+    - match:
+    - uri:
+        prefix: /
+    route:
+    - destination:
+        host: muffin-wallet
+        port:
+          number: 8081

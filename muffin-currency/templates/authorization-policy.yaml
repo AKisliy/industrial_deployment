@@ -1,0 +1,17 @@
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-wallet-only
+  namespace: bighw
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "muffin-currency.name" . }}
+  action: ALLOW
+  rules:
+  - from:
+    - source:
+        principals: ["cluster.local/ns/bighw/sa/muffin-wallet-sa"]
+    to:
+    - operation:
+        methods: ["GET", "POST"]
