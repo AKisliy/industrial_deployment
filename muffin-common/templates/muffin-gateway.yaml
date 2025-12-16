@@ -1,14 +1,9 @@
 apiVersion: networking.istio.io/v1
 kind: Gateway
 metadata:
-  name: muffin-gateway
+  name: {{ .Values.gateway.name }}
 spec:
   selector:
     istio: ingressgateway
   servers:
-  - port:
-      number: 80
-      name: http
-      protocol: HTTP
-    hosts:
-    - "bighw.com"
+  {{- toYaml .Values.gateway.servers | nindent 2 }}

@@ -1,12 +1,12 @@
 apiVersion: networking.istio.io/v1
 kind: ServiceEntry
 metadata:
-  name: postgres-external
+  name: {{ .Values.serviceEntry.name }}
 spec:
   hosts:
-  - host.minikube.internal
+  - {{ .Values.appConfig.datasource.host }}
   ports:
-  - number: 54321       
+  - number: {{ .Values.appConfig.datasource.port }}    
     name: tcp-postgres
     protocol: TCP       
   resolution: DNS

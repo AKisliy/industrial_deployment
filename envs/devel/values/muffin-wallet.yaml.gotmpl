@@ -33,7 +33,7 @@ readinessProbe:
 volumes: 
   - name: application-config-volume
     configMap:
-      name: muffin-wallet
+      name: muffin-wallet-config
 
 volumeMounts: 
   - name: application-config-volume
@@ -45,3 +45,23 @@ serviceAccount:
 
 virtualService:
   name: muffin-wallet-vs
+  hosts:
+    - {{ .Values.global.appDomain }}
+
+appConfig:
+  datasource:
+    host: "host.minikube.internal"
+    port: 54321
+    database: "muffin_wallet"
+    username: "root"
+  
+  externalServices:
+    currency:
+      name: "muffin-currency" 
+      port: 8083
+
+serviceEntry:
+  name: postgres-external
+
+gateway:
+  name: muffin-gateway

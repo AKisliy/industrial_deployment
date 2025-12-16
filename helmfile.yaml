@@ -7,7 +7,7 @@ environments:
             muffinWallet: 0.1.0
             muffinCommon: 0.1.0
       - global:
-          domain: bighw.com
+          appDomain: bighw.com
 ---
 releases:
   - name: muffin-common
@@ -17,7 +17,7 @@ releases:
     chart: ./muffin-common
     version: "{{ .Values.charts.versions.muffinCommon }}"
     values:
-      - envs/{{ .Environment.Name }}/values/muffin-common.yaml
+      - envs/{{ .Environment.Name }}/values/muffin-common.yaml.gotmpl
   - name: muffin-currency
     labels:
       app: muffin-currency
@@ -35,4 +35,4 @@ releases:
     needs:
       - muffin-currency
     values:
-      - envs/{{ .Environment.Name }}/values/muffin-wallet.yaml
+      - envs/{{ .Environment.Name }}/values/muffin-wallet.yaml.gotmpl
