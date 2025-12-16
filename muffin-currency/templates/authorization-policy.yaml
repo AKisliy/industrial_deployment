@@ -10,7 +10,7 @@ spec:
   rules:
   - from:
     - source:
-        principals: ["cluster.local/ns/bighw/sa/muffin-wallet-sa"]
+        principals: ["cluster.local/ns/{{ .Release.Namespace }}/sa/muffin-wallet-sa"]
     to:
     - operation:
         methods: ["GET", "POST"]

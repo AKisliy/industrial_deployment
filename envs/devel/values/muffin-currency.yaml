@@ -27,3 +27,22 @@ readinessProbe:
     port: 8080
     initialDelaySeconds: 2
     periodSeconds: 5
+  
+destinationRule:
+  name: muffin-currency-dr
+  maxConnections: 1
+  http1MaxPendingRequests: 1
+  maxRequestsPerConnection: 1
+  consecutive5xxErrors: 1
+  interval: 1s
+  baseEjectionTime: 3m
+  maxEjectionPercent: 100
+
+virtualService:
+  name: muffin-currency-internal-vs
+  http:
+    timeout: 2s
+    retries:
+      attempts: 3
+      perTryTimeout: 2s
+      retryOn: gateway-error,connect-failure,refused-stream,5xx

@@ -1,18 +1,18 @@
 apiVersion: networking.istio.io/v1
 kind: DestinationRule
 metadata:
-  name: muffin-currency-dr
+  name: "{{ .Values.destinationRule.name }}"
 spec:
-  host: muffin-currency.bighw.svc.cluster.local
+  host: "{{ include "muffin-currency.fullname" . }}.{{ .Release.Namespace }}.svc.cluster.local"
   trafficPolicy:
     connectionPool:
       tcp:
-        maxConnections: 1
+        maxConnections: {{ .Values.destinationRule.maxConnections }}
       http:
-        http1MaxPendingRequests: 1
-        maxRequestsPerConnection: 1
+        http1MaxPendingRequests: {{ .Values.destinationRule.http1MaxPendingRequests }}
+        maxRequestsPerConnection: {{ .Values.destinationRule.maxRequestsPerConnection }}
     outlierDetection:
-      consecutive5xxErrors: 1
-      interval: 1s
-      baseEjectionTime: 3m
-      maxEjectionPercent: 100
+      consecutive5xxErrors: {{ .Values.destinationRule.consecutive5xxErrors }}  
+      interval: {{ .Values.destinationRule.interval }}
+      baseEjectionTime: {{ .Values.destinationRule.baseEjectionTime }}
+      maxEjectionPercent: {{ .Values.destinationRule.maxEjectionPercent }}
