@@ -5,8 +5,17 @@ environments:
           versions:
             muffinCurrency: 0.1.0
             muffinWallet: 0.1.0
+            muffinCommon: 0.1.0
 ---
 releases:
+  - name: muffin-common
+    labels:
+      app: muffin-common
+    wait: true
+    chart: ./muffin-common
+    version: "{{ .Values.charts.versions.muffinCommon }}"
+    values:
+      - envs/{{ .Environment.Name }}/values/muffin-common.yaml
   - name: muffin-currency
     labels:
       app: muffin-currency

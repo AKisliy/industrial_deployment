@@ -9,7 +9,6 @@ spec:
   - muffin-gateway
   http:
   - match:
-    - match:
     - uri:
         prefix: /
     route:
