@@ -42,3 +42,6 @@ volumeMounts:
 serviceAccount:
   create: true
   name: "muffin-wallet-sa"
+
+virtualService:
+  name: muffin-wallet-vs
