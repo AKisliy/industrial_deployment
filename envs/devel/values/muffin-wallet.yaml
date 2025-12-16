@@ -15,18 +15,6 @@ service:
   port: 8081
   portName: http
 
-ingress:
-  className: nginx
-  hosts:
-    - host: bighw.com
-      paths:
-        - path: /
-          pathType: Prefix
-  tls:
-    - hosts:
-        - bighw.com
-      secretName: muffin-tls
-
 livenessProbe:
   httpGet:
     path: /actuator/health/liveness

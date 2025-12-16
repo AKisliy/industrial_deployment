@@ -2,7 +2,6 @@ apiVersion: security.istio.io/v1
 kind: PeerAuthentication
 metadata:
   name: default-auth
-  namespace: bighw
 spec:
   mtls:
     mode: STRICT

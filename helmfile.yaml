@@ -6,6 +6,8 @@ environments:
             muffinCurrency: 0.1.0
             muffinWallet: 0.1.0
             muffinCommon: 0.1.0
+      - global:
+          domain: bighw.com
 ---
 releases:
   - name: muffin-common
