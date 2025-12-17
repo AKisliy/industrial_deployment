@@ -1,3 +1,4 @@
+{{ if not .Values.useOnlyDeployment }}
 apiVersion: security.istio.io/v1beta1
 kind: AuthorizationPolicy
 metadata:
@@ -14,3 +15,4 @@ spec:
     to:
     - operation:
         methods: ["GET", "POST"]
+{{ end }}

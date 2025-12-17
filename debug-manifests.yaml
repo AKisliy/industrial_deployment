@@ -1,0 +1,391 @@
+---
+# Source: muffin-common/templates/muffin-gateway.yaml
+apiVersion: networking.istio.io/v1
+kind: Gateway
+metadata:
+  name: muffin-gateway
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - hosts:
+    - bighw.com
+    port:
+      name: http
+      number: 80
+      protocol: HTTP
+---
+# Source: muffin-common/templates/peer-authentication.yaml
+apiVersion: security.istio.io/v1
+kind: PeerAuthentication
+metadata:
+  name: default-auth
+spec:
+  mtls:
+    mode: STRICT
+
+---
+# Source: muffin-currency/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: muffin-currency
+  labels:
+    helm.sh/chart: muffin-currency-0.1.0
+    app.kubernetes.io/name: muffin-currency
+    app.kubernetes.io/instance: muffin-currency
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+    - port: 8083
+      targetPort: 8080
+      protocol: TCP
+      name: http
+  selector:
+    app.kubernetes.io/name: muffin-currency
+---
+# Source: muffin-currency/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: muffin-currency
+  labels:
+    helm.sh/chart: muffin-currency-0.1.0
+    app.kubernetes.io/name: muffin-currency
+    app.kubernetes.io/instance: muffin-currency
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: muffin-currency
+  template:
+    metadata:
+      labels:
+        helm.sh/chart: muffin-currency-0.1.0
+        app.kubernetes.io/name: muffin-currency
+        app.kubernetes.io/instance: muffin-currency
+        app.kubernetes.io/version: "1.16.0"
+        app.kubernetes.io/managed-by: Helm
+        version: v1
+    spec:
+      containers:
+        - name: muffin-currency
+          image: "aadan1lov/muffin-currency:1.0.0"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          livenessProbe:
+            httpGet:
+              path: /rate?from=PLAIN&to=CHOKOLATE
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /rate?from=PLAIN&to=CHOKOLATE
+              port: 8080
+            initialDelaySeconds: 2
+            periodSeconds: 5
+---
+# Source: muffin-currency/templates/authorization-policy.yaml
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: allow-wallet-only
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: muffin-currency
+  action: ALLOW
+  rules:
+  - from:
+    - source:
+        principals: ["cluster.local/ns/bighw/sa/muffin-wallet-sa"]
+    to:
+    - operation:
+        methods: ["GET", "POST"]
+---
+# Source: muffin-currency/templates/destination-rule.yaml
+apiVersion: networking.istio.io/v1
+kind: DestinationRule
+metadata:
+  name: "muffin-currency-dr"
+spec:
+  host: "muffin-currency.bighw.svc.cluster.local"
+  trafficPolicy:
+    connectionPool:
+      tcp:
+        maxConnections: 1
+      http:
+        http1MaxPendingRequests: 1
+        maxRequestsPerConnection: 1
+    outlierDetection:
+      consecutive5xxErrors: 1  
+      interval: 1s
+      baseEjectionTime: 3m
+      maxEjectionPercent: 100
+  subsets:
+  - name: v1
+    labels:
+      version: v1
+  - name: v2
+    labels:
+      version: v2
+---
+# Source: muffin-currency/templates/virtual-service.yaml
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: muffin-currency-internal-vs
+spec:
+  hosts:
+  - "muffin-currency.bighw.svc.cluster.local"
+  http:
+  - route:
+    - destination:
+        host: "muffin-currency"
+        subset: v1
+        port:
+          number: 8083
+      weight: 90
+    - destination:
+        host: "muffin-currency"
+        subset: v2
+        port:
+          number: 8083
+      weight: 10
+    timeout: 2s
+    retries:
+      attempts: 3
+      perTryTimeout: 2s
+      retryOn: gateway-error,connect-failure,refused-stream,5xx
+
+---
+# Source: muffin-currency/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: muffin-currency-v2
+  labels:
+    helm.sh/chart: muffin-currency-0.1.0
+    app.kubernetes.io/name: muffin-currency
+    app.kubernetes.io/instance: muffin-currency-v2
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: muffin-currency
+  template:
+    metadata:
+      labels:
+        helm.sh/chart: muffin-currency-0.1.0
+        app.kubernetes.io/name: muffin-currency
+        app.kubernetes.io/instance: muffin-currency-v2
+        app.kubernetes.io/version: "1.16.0"
+        app.kubernetes.io/managed-by: Helm
+        version: v2
+    spec:
+      containers:
+        - name: muffin-currency
+          image: "aadan1lov/muffin-currency:1.0.0"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+          livenessProbe:
+            httpGet:
+              path: /rate?from=PLAIN&to=CHOKOLATE
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /rate?from=PLAIN&to=CHOKOLATE
+              port: 8080
+            initialDelaySeconds: 2
+            periodSeconds: 5
+
+---
+# Source: muffin-wallet/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: muffin-wallet-sa
+  labels:
+    helm.sh/chart: muffin-wallet-0.1.0
+    app.kubernetes.io/name: muffin-wallet
+    app.kubernetes.io/instance: muffin-wallet
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+---
+# Source: muffin-wallet/templates/secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: muffin-wallet
+data:
+  SPRING_DATASOURCE_PASSWORD: cGFzc3dvcmQ=
+---
+# Source: muffin-wallet/templates/tls-secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: muffin-tls
+type: kubernetes.io/tls
+data:
+  tls.crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSURERENDQWZTZ0F3SUJBZ0lVWUhITFVoSFgzaldaQmVXMitQQWNNVWdzTVRRd0RRWUpLb1pJaHZjTkFRRUwKQlFBd0VqRVFNQTRHQTFVRUF3d0hVbTl2ZENCRFFUQWVGdzB5TlRFd01UUXdPVEUzTWpaYUZ3MHlOakV3TVRRdwpPVEUzTWpaYU1CUXhFakFRQmdOVkJBTU1DV0pwWjJoM0xtTnZiVENDQVNJd0RRWUpLb1pJaHZjTkFRRUJCUUFECmdnRVBBRENDQVFvQ2dnRUJBTVRkZ0FOa2U0Si9TNHBOZm1JZ0wrU0NvejR4WkkrajVOTlpTdFFDOTFwcUtIa3MKa0ZpaWNtN09mZ3VCaU5FYWp1amZGcm81OTFpME9mOVdjcGoyT0h1dWRyeFN6aTJ1UXBUelZCOXJ1NHVRdFhsegpwbXVhdlcxUlIrdmdEbTE1RHNVYzhiTHdXK0U0b1o2K29XaTBQRzJkL3hXQkV6dzlMakI4QlFiNThYd3UvakgyClYrMnNTUXZwMlkwUFExNmtHSkxIdm85RHZrS25MVmowQ0RVS29aNjFneUc3YkwvNWp1TFVEOVNkdnBYN1lib0oKam1Vd3MrR0RONXR6QituOG1KaDRrS0tEM2pUaStiM1VkeDJwb2NGakFxWVdvVFZZQVFTcHF4WVAxcXZZNngxNQpJWllsNEpqZ3dXQTYwbVpudUZXanpYSmNMRXhWdFE3V3hESnRadzhDQXdFQUFhTllNRll3RkFZRFZSMFJCQTB3CkM0SUpZbWxuYUhjdVkyOXRNQjBHQTFVZERnUVdCQlM5UWp5azJ2SnMyMFdTdzdKdUFFc0k1WHI1d1RBZkJnTlYKSFNNRUdEQVdnQlRtVVRoelozdWNZM1FneHpwRTB1M3NpcjlrL0RBTkJna3Foa2lHOXcwQkFRc0ZBQU9DQVFFQQpCL2ltVnl0VWZSREFJOUc3NmpaUC84OTZERERUTW5HUndKU3dlYUUvbHAxcSt4N3ZENkJrSVQvU1plajZKOWVFCkxxMDlmd3BhUDVmUVNuZVppcjQxR21PS05Wd0laQXFjUHZpTHV1bElVMWs5UXF3aXdqOGRSTVNGTWJxUWFFQ0MKQ2dndmhDRC84clJVOU5BcnUvLytvaVkwZjZTeUMrc1J5OGZseXdzUmpubmRFUytyZzBlTGlYWE1YUkV6aFdvZApEbVhrZDd0QWRBdENteG5iWXN2MzNYa1YvZ1REdE01eGRLS0xHNWV6a2VwMUp6U3JKeVhkZHB5amxFWFRHOWFJCjVpcnZmWkpXbnhic2l1QjhtY0J6Y2JwWFNnaURMWkIrU1hOOXdDN1M0aE9nU1B6SHRvT2drU3Q1Ung1NTFDV1cKbW5GNUNMdGR1YjdYZks1ODQzVmJPdz09Ci0tLS0tRU5EIENFUlRJRklDQVRFLS0tLS0K
+  tls.key: LS0tLS1CRUdJTiBQUklWQVRFIEtFWS0tLS0tCk1JSUV2d0lCQURBTkJna3Foa2lHOXcwQkFRRUZBQVNDQktrd2dnU2xBZ0VBQW9JQkFRREUzWUFEWkh1Q2YwdUsKVFg1aUlDL2tncU0rTVdTUG8rVFRXVXJVQXZkYWFpaDVMSkJZb25KdXpuNExnWWpSR283bzN4YTZPZmRZdERuLwpWbktZOWpoN3JuYThVczR0cmtLVTgxUWZhN3VMa0xWNWM2WnJtcjF0VVVmcjRBNXRlUTdGSFBHeThGdmhPS0dlCnZxRm90RHh0bmY4VmdSTThQUzR3ZkFVRytmRjhMdjR4OWxmdHJFa0w2ZG1ORDBOZXBCaVN4NzZQUTc1Q3B5MVkKOUFnMUNxR2V0WU1odTJ5LytZN2kxQS9VbmI2VisyRzZDWTVsTUxQaGd6ZWJjd2ZwL0ppWWVKQ2lnOTQwNHZtOQoxSGNkcWFIQll3S21GcUUxV0FFRXFhc1dEOWFyMk9zZGVTR1dKZUNZNE1GZ090Sm1aN2hWbzgxeVhDeE1WYlVPCjFzUXliV2NQQWdNQkFBRUNnZ0VBWWhGUlB0OWtZM3FVSDk1QXNoTUVxSm1uUmtrR3BrTm5yeDBSR0pJdHRCMmoKOGRFUVN3Y0phRWQzSkxZdmVMTDVNK3BHQVJqMUxYd0NWRDgxTVJ1ZXdZWUVZZ1lCN1dHY2kyUzNxRHRibnNmRQpqeTdjWFVnbFN2cXRrRVA2Qy9DOU9kWVVWU1pGTHVtdUlVMG5UT2hVSGVzUjhoMXRmcG1mazhtRUc1aVJBbUhwCi9UVWkzaGdwdzRkU0pMSlNBQnJ2aDhKb0cwcVBRZWdyRUk1WDh2SThZNFRyUTk4MXpjUzI4bW9xcDJjWnFITWIKaVhtaDJTZm5WWkxPVVNPckVQbkZPVnNpWFAvV3dDeDYzNjJSdndla29pSjhITVBaZnluWXdvQU9UNUZabkNqeAp4ZjdyWDdGRk1FL0JROG9ENDdEQ0dVUnhrOUt2VVpEUFFyTDRuNkViR1FLQmdRRDA3cTV0cXQ0QUYzRmt5emdXCmg2dDMrcVJvTEF5QkZaMWM3anlZdm4zNWdDVEVHc3h5UmpnQnRqaWxZMVRBMXptZ3UxMDZMdGFtdm42QlphQ0EKa3U4cmZUUUxpVWhHdFRNeGxWejI3RWdzTnhRSWM3b2ZzY1BOT0VpMUhiYUU2ZENhTTlzVnJLdCthaWlGOUhZZQpqK2JMZmEzcU1NNkp4ZFc5ek0vT0UvZEpOUUtCZ1FETndzb3pSVnlqenZqV3huYWVLMEJ0TWlrUUVWaURpSjJJCkhPc1RSTkZHVUpsdHFuQ1hwbUN5TDFYRWR6OGVTbXhBTWNCR2E3MER0U2FTY0IycDlIeVR4NUt2alJpM0IzZXQKQm9DQjI4RzlPb1ZSRWZ2NXZUUDgvK0lFV0xFU1d4UGgrdDc0aS9LdUkxdWF0TUVqSEVlWEVOS09LcFZsbEdMVwpFYUxBdnM0N3N3S0JnUUNncjVHcGl1WjM0dWxXZWVnREIrQ2JKc2tET3BxOWVPT3pHdXlRUExEQ3BhbjVLYWVrCjlLSTdwVU5HWllNdHZFVW5TS1Joem1hdUg5MDRvT2FLVTFzckNjbkNJNzlSL0FCbzhCZDhPd2tpVU1RSXczdUEKM1l1YUwrbXJRS0lFVXF5eTdZQTJtUUF0UUJIeng2eFNZby9FUW1COWVxV1ZSei94YzlPRTNCNW9YUUtCZ1FDUQpEVUYyWjZjVjM3OEN6bXNaRFByTCtBUWJoYWxNWFFhODFsSVZhV2FDTGNkY3FhaXQ0d05yZkF3MXdhNWt6SUhBCjU1UFBPWHBZOENnUytYOHJEMGx3UkphRFpPcmFxTlcyUXdrUTRRTmdNV3BJZWFqSkRSY3FseEpyTEpTN1h4d3EKWjNKVzI5T0k2cVFsU1VxMkJBUnkxSW8wa2NlS0dEcWgyREx6Y2lIOFZRS0JnUUNZRnNQOXUxbmN4azNIVWFGNgpXZ3lsdjlyY2JXSmQ0VFZDaE9WbWh4L2dhWG5UM1ZROS9LdG82MUpZb3RIZnlWRSs4NVE1dXg3MmhMN05VYXZ6Ci9NY2lZNVRCNE1NTFhhbE1VQW1VYXVLOVUrZytmRktFK0l1d0VkeU1Ha3FEeGw2UzR3OEpFQjFVQXJtcXNrWEMKMFArSVE2Q0lLRTY1bmVVNy9XU3JHaGd4NHc9PQotLS0tLUVORCBQUklWQVRFIEtFWS0tLS0tCg==
+---
+# Source: muffin-wallet/templates/configmap-env.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: muffin-wallet-env
+data:
+  JDK_JAVA_OPTIONS: "-Dspring.config.additional-location=/app/config/application.yaml"
+---
+# Source: muffin-wallet/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: muffin-wallet-config
+data:
+  application.yaml: |
+    ---
+    server:
+      port: 8081
+
+    spring:
+      datasource:
+        url: jdbc:postgresql://host.minikube.internal:54321/muffin_wallet
+        username: root
+
+    currency:
+      service:
+        url: http://muffin-currency.bighw.svc.cluster.local:8083/rate
+
+    management:
+      endpoints:
+        web:
+          exposure:
+            include: health, info
+      endpoint:
+        health:
+          probes:
+            enabled: true
+          show-details: always
+---
+# Source: muffin-wallet/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: muffin-wallet
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: muffin-wallet
+    app.kubernetes.io/instance: muffin-wallet
+  ports:
+    - port: 8081
+      targetPort: 8081
+      protocol: TCP
+      name: http
+---
+# Source: muffin-wallet/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: muffin-wallet
+  labels:
+    helm.sh/chart: muffin-wallet-0.1.0
+    app.kubernetes.io/name: muffin-wallet
+    app.kubernetes.io/instance: muffin-wallet
+    app.kubernetes.io/version: "1.16.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: muffin-wallet
+      app.kubernetes.io/instance: muffin-wallet
+  template:
+    metadata:
+      labels:
+        helm.sh/chart: muffin-wallet-0.1.0
+        app.kubernetes.io/name: muffin-wallet
+        app.kubernetes.io/instance: muffin-wallet
+        app.kubernetes.io/version: "1.16.0"
+        app.kubernetes.io/managed-by: Helm
+    spec:
+      serviceAccountName: muffin-wallet-sa
+      containers:
+        - name: muffin-wallet
+          image:  "aadan1lov/muffin-wallet:1.1.0"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8081
+          volumeMounts:
+            - mountPath: /app/config
+              name: application-config-volume
+          envFrom:
+            - secretRef:
+                name: muffin-wallet
+            - configMapRef:
+                name: muffin-wallet-env
+          livenessProbe:
+            httpGet:
+              path: /actuator/health/liveness
+              port: 8081
+            initialDelaySeconds: 60
+            periodSeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /actuator/health/readiness
+              port: 8081
+            initialDelaySeconds: 5
+            periodSeconds: 10
+      volumes:
+        - configMap:
+            name: muffin-wallet-config
+          name: application-config-volume
+---
+# Source: muffin-wallet/templates/db-service-entry.yaml
+apiVersion: networking.istio.io/v1
+kind: ServiceEntry
+metadata:
+  name: postgres-external
+spec:
+  hosts:
+  - host.minikube.internal
+  ports:
+  - number: 54321    
+    name: tcp-postgres
+    protocol: TCP       
+  resolution: DNS
+  location: MESH_EXTERNAL
+---
+# Source: muffin-wallet/templates/virtual-service.yaml
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: muffin-wallet-vs
+spec:
+  hosts:
+  - "bighw.com"
+  gateways:
+  - muffin-gateway
+  http:
+  - match:
+    - uri:
+        prefix: /
+    route:
+    - destination:
+        host: "muffin-wallet"
+        port:
+          number: 8081
+

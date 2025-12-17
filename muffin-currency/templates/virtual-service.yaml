@@ -1,3 +1,5 @@
+
+{{ if not .Values.useOnlyDeployment }}
 apiVersion: networking.istio.io/v1
 kind: VirtualService
 metadata:
@@ -9,10 +11,19 @@ spec:
   - route:
     - destination:
         host: "{{ include "muffin-currency.fullname" . }}"
+        subset: v1
         port:
           number: {{ .Values.service.port }}
+      weight: 90
+    - destination:
+        host: "{{ include "muffin-currency.fullname" . }}"
+        subset: v2
+        port:
+          number: {{ .Values.service.port }}
+      weight: 10
     timeout: {{ .Values.virtualService.http.timeout }}
     retries:
       attempts: {{ .Values.virtualService.http.retries.attempts }}
       perTryTimeout: {{ .Values.virtualService.http.retries.perTryTimeout }}
       retryOn: {{ .Values.virtualService.http.retries.retryOn }}
+{{ end }}

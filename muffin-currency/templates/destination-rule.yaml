@@ -1,3 +1,4 @@
+{{ if not .Values.useOnlyDeployment }}
 apiVersion: networking.istio.io/v1
 kind: DestinationRule
 metadata:
@@ -16,3 +17,11 @@ spec:
       interval: {{ .Values.destinationRule.interval }}
       baseEjectionTime: {{ .Values.destinationRule.baseEjectionTime }}
       maxEjectionPercent: {{ .Values.destinationRule.maxEjectionPercent }}
+  subsets:
+  - name: v1
+    labels:
+      version: v1
+  - name: v2
+    labels:
+      version: v2
+{{ end }}
