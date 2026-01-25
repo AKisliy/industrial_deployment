@@ -13,5 +13,18 @@ services:
       - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
     restart: unless-stopped
 
+  victoria-metrics:
+    image: victoriametrics/victoria-metrics:v1.97.1
+    container_name: victoria-metrics
+    ports:
+      - "8428:8428"
+    volumes:
+      - vmdata:/storage
+    command:
+      - "-storageDataPath=/storage"
+      - "-retentionPeriod=1y"
+    restart: unless-stopped
+
 volumes:
   muffin_pg_data:
+  vmdata:

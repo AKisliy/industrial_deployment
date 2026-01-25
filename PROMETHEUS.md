@@ -12,7 +12,7 @@ minikube tunnel
 127.0.0.1       bighw.com
 ```
 
-Также в корне папке есть `docker-compose.yaml`. С помощью него поднимаем необходимые для БД:
+Также в корне папке есть `docker-compose.yaml`. С помощью него поднимаем необходимые для работы БД:
 ```sh
 docker compose up --build -d
 ```
@@ -134,3 +134,13 @@ rate(hikaricp_connections_usage_seconds_sum{app_kubernetes_io_name="muffin-walle
 while sleep 0.05; do curl -s -o /dev/null -X 'POST' 'http://bighw.com/v1/muffin-wallet/32354edf-4466-4599-8363-d14a386309dc/transaction' -H 'accept: application/json' -H 'Content-Type: application/json' -d '{ "to_muffin_wallet_id": "386b8757-f4b3-4280-8910-5b54a7959ace", "amount": 1 }'; done;
 ```
 Смотрим на увеличение значения.
+
+
+## Бонус - проверка LTS
+Выше была сказано, что вместе с базой разворачивается VictoriaMetrics, которая была выбрана в качестве решения для LTS хранения метрик.
+
+Для того, чтобы проверить, что метрики действительно сохраняются в наше LTS хранилище:
+1. Перейдем в интерфейс VM: `http://localhost:8428/vmui`
+2. Сделаем запрос: `http_server_requests_seconds_count`
+
+Если видим графики - все работает :)
