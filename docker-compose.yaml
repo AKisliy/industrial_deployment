@@ -1,0 +1,17 @@
+services:
+  db:
+    image: postgres:16.9-alpine
+    container_name: muffinDB
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: muffin_wallet
+    ports:
+      - "54321:5432"
+    volumes:
+      - muffin_pg_data:/var/lib/postgresql/data
+      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+    restart: unless-stopped
+
+volumes:
+  muffin_pg_data:

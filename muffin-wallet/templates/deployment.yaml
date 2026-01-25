@@ -13,6 +13,10 @@ spec:
     metadata:
       labels:
         {{- include "muffin-wallet.labels" . | nindent 8 }}
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/actuator/prometheus" 
+        prometheus.io/port: {{ .Values.containerPort | quote }}
     spec:
       serviceAccountName: {{ .Values.serviceAccount.name | default "default" }}
       containers:

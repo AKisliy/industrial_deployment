@@ -30,12 +30,12 @@ readinessProbe:
   
 destinationRule:
   name: muffin-currency-dr
-  maxConnections: 1
+  maxConnections: 10
   http1MaxPendingRequests: 1
   maxRequestsPerConnection: 1
-  consecutive5xxErrors: 1
+  consecutive5xxErrors: 4
   interval: 1s
-  baseEjectionTime: 3m
+  baseEjectionTime: 1m
   maxEjectionPercent: 100
 
 virtualService:

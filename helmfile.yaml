@@ -26,17 +26,6 @@ releases:
     version: "{{ .Values.charts.versions.muffinCurrency }}"
     values:
       - envs/{{ .Environment.Name }}/values/muffin-currency.yaml
-      - versionLabel: v1
-  - name: muffin-currency-v2
-    labels:
-      app: muffin-currency
-    wait: true
-    chart: ./muffin-currency
-    version: "{{ .Values.charts.versions.muffinCurrency }}"
-    values:
-      - envs/{{ .Environment.Name }}/values/muffin-currency.yaml
-      - versionLabel: v2
-      - useOnlyDeployment: true
   - name: muffin-wallet
     labels:
       app: muffin-wallet

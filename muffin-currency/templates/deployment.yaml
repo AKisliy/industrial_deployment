@@ -13,7 +13,6 @@ spec:
     metadata:
       labels:
         {{- include "muffin-currency.labels" . | nindent 8 }}
-        version: {{ .Values.versionLabel }}
     spec:
       containers:
         - name: {{ include "muffin-currency.name" . }}
