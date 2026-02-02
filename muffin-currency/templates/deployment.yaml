@@ -32,3 +32,6 @@ spec:
               port: {{ .Values.readinessProbe.httpGet.port }}
             initialDelaySeconds: {{ .Values.readinessProbe.httpGet.initialDelaySeconds }}
             periodSeconds: {{ .Values.readinessProbe.httpGet.periodSeconds }}
+          envFrom:
+            - configMapRef:
+                name: {{ include "muffin-currency.fullname" . }}-configmap

@@ -1,0 +1,10 @@
+apiVersion: networking.istio.io/v1
+kind: Gateway
+metadata:
+  name: {{ .Values.observability.gateway.name }}
+  namespace: {{ .Values.observability.gateway.namespace }}
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    {{- toYaml .Values.observability.gateway.servers | nindent 2 }}

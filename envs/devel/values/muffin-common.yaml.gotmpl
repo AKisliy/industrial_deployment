@@ -7,3 +7,49 @@ gateway:
       protocol: HTTP
     hosts:
     - {{ .Values.global.appDomain }}
+
+observability:
+  gateway:
+    name: monitoring-gateway
+    namespace: istio-system
+    servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      hosts:
+      - {{ .Values.global.grafanaDomain }}
+      - {{ .Values.global.zipkinDomain }}
+  grafana:
+    namespace: logging
+    host: {{ .Values.global.grafanaDomain }}
+    virtualService:
+      name: grafana-vs
+      http:
+      - route:
+        - destination:
+            host: grafana
+            port:
+              number: 80
+  loki:
+    url: {{ .Values.global.lokiUrl }}
+  tracing:
+    zipkin:
+      namespace: tracing
+      host: {{ .Values.global.zipkinDomain }}
+      virtualService:
+        name: zipkin-vs
+      service:
+        name: zipkin
+        port: 9411
+      deployment:
+        name: zipkin
+        replicas: 1
+        containers:
+          - name: zipkin
+            image: openzipkin/zipkin:3.0
+            ports:
+              - containerPort: 9411
+            env:
+              - name: STORAGE_TYPE
+                value: mem

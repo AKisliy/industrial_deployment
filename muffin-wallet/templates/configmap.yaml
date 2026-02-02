@@ -12,6 +12,9 @@ data:
       datasource:
         url: jdbc:postgresql://{{ .Values.appConfig.datasource.host }}:{{ .Values.appConfig.datasource.port }}/{{ .Values.appConfig.datasource.database }}
         username: {{ .Values.appConfig.datasource.username }}
+      output:
+        ansi:
+          enabled: NEVER
 
     currency:
       service:
@@ -28,10 +31,19 @@ data:
             enabled: true
           show-details: always
         prometheus:
-          enabled
+          enabled: true
       metrics:
         distribution:
           percentiles-histogram:
             http:
               server:
                 requests: true
+      tracing:
+        sampling:
+          probability: 1.0 
+      zipkin:
+        tracing:
+          endpoint: "{{ .Values.observability.zipkin.url }}/api/v2/spans" 
+    logging:
+      pattern:
+        console: "%d{yyyy-MM-dd HH:mm:ss} %-5level [%X{traceId:-},%X{spanId:-}] %logger{36} - %msg%n"

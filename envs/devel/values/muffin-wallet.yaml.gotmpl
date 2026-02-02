@@ -1,9 +1,9 @@
 replicaCount: 1
 
 image:
-  repository: aadan1lov/muffin-wallet
+  repository: akisliy/muffin-wallet
   pullPolicy: IfNotPresent
-  tag: "1.1.0"
+  tag: "1.0"
 
 nameOverride: ""
 fullnameOverride: ""
@@ -71,3 +71,7 @@ serviceEntry:
 
 gateway:
   name: muffin-gateway
+
+observability:
+  zipkin:
+    url: {{ .Values.global.zipkinUrl }}

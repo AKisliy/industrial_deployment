@@ -1,0 +1,83 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alloy-config
+  namespace: logging
+data:
+  config.alloy: |
+    discovery.kubernetes "pods" {
+        role = "pod"
+    }
+
+    discovery.relabel "muffin_logs" {
+        targets = discovery.kubernetes.pods.targets
+
+        rule {
+            source_labels = ["__meta_kubernetes_namespace"]
+            action        = "keep"
+            regex         = "bighw"
+        }
+    
+        rule {
+            source_labels = ["__meta_kubernetes_pod_label_app_kubernetes_io_name"]
+            target_label  = "app"
+        }
+    
+        rule {
+            source_labels = ["__meta_kubernetes_pod_name"]
+            target_label  = "pod"
+        }
+    }
+
+    loki.source.kubernetes "pod_logs" {
+        targets    = discovery.relabel.muffin_logs.output
+        forward_to = [loki.process.universal_parser.receiver]
+    }
+
+    loki.process "universal_parser" {
+        forward_to = [loki.write.local_loki.receiver]
+
+        stage.match {
+            selector = "{app=\"muffin-wallet\"}"
+
+            stage.regex {
+                expression = `\[(?P<traceId>[a-f0-9]+),(?P<spanId>[a-f0-9]+)\]`
+            }
+            
+            stage.regex {
+                expression = `\s+(?P<level>INFO|WARN|ERROR|DEBUG)\s+`
+            }
+
+            stage.labels {
+                values = {
+                    level   = "level",   
+                    traceId = "traceId",
+                }
+            }
+        }
+
+        stage.match {
+            selector = "{app=\"muffin-currency\"}"
+            
+            stage.json {
+                expressions = {
+                    traceId = "trace_id",
+                    level   = "level",
+                    msg     = "msg",
+                }
+            }
+            
+            stage.labels {
+                values = { 
+                    traceId = "traceId",
+                    level   = "level",
+                }
+            }
+        }
+    }
+
+    loki.write "local_loki" {
+        endpoint {
+            url = "{{ .Values.observability.loki.url }}/loki/api/v1/push"
+        }
+    }

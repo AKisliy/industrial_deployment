@@ -1,0 +1,16 @@
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: {{ .Values.observability.tracing.zipkin.virtualService.name }}
+  namespace: {{ .Values.observability.tracing.zipkin.namespace }}
+spec:
+  hosts:
+  - {{ .Values.observability.tracing.zipkin.host }}
+  gateways:
+  - {{ .Values.observability.gateway.namespace }}/{{ .Values.observability.gateway.name }}
+  http:
+  - route:
+    - destination:
+        host: {{ .Values.observability.tracing.zipkin.service.name }}
+        port:
+          number: {{ .Values.observability.tracing.zipkin.service.port }}

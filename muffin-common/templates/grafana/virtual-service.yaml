@@ -1,0 +1,12 @@
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: {{ .Values.observability.grafana.virtualService.name }}
+  namespace: {{ .Values.observability.grafana.namespace }}
+spec:
+  hosts:
+  - {{ .Values.observability.grafana.host }}
+  gateways:
+  - {{ .Values.observability.gateway.namespace }}/{{ .Values.observability.gateway.name }}
+  http:
+  {{ toYaml .Values.observability.grafana.virtualService.http | nindent 2 }}

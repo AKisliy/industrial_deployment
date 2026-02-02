@@ -1,0 +1,17 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.observability.tracing.zipkin.deployment.name }}
+  namespace: {{ .Values.observability.tracing.zipkin.namespace }}
+spec:
+  replicas: {{ .Values.observability.tracing.zipkin.deployment.replicas }}
+  selector:
+    matchLabels:
+      app: zipkin
+  template:
+    metadata:
+      labels:
+        app: zipkin
+    spec:
+      containers:
+        {{ toYaml .Values.observability.tracing.zipkin.deployment.containers | nindent 8 }}

@@ -1,0 +1,31 @@
+persistence:
+  enabled: true
+  size: 10Gi
+adminPassword: "admin"
+      
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+      - name: Loki
+        type: loki
+        url: {{ .Values.global.lokiUrl }}
+        access: proxy
+        jsonData:
+          derivedFields:
+            - datasourceUid: Zipkin
+              matcherRegex: '(?:\[|trace_id":")([a-f0-9]{16,32})'
+              name: TraceID
+              url: "$${__value.raw}"
+
+      - name: Zipkin
+        type: zipkin
+        url: {{ .Values.global.zipkinUrl }}
+        access: proxy
+        uid: Zipkin 
+
+      - name: Prometheus
+        type: prometheus
+        url: {{ .Values.global.prometheusUrl }}
+        access: proxy
+        isDefault: true

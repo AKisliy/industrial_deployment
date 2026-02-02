@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.observability.tracing.zipkin.service.name }}
+  namespace: {{ .Values.observability.tracing.zipkin.namespace }}
+  labels:
+    app: zipkin
+spec:
+  type: ClusterIP
+  ports:
+    - port: {{ .Values.observability.tracing.zipkin.service.port }}
+      targetPort: {{ .Values.observability.tracing.zipkin.service.port }}
+      name: http
+  selector:
+    app: zipkin
