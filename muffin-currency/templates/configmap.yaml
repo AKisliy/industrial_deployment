@@ -3,4 +3,4 @@ kind: ConfigMap
 metadata:
     name: {{ include "muffin-currency.fullname" . }}-configmap
 data:
-    ZIPKIN_URL: "{{ .Values.observability.zipkin.url }}/api/v2/spans"
+    OTEL_EXPORTER_OTLP_ENDPOINT: {{ .Values.observability.otel.endpoint }}

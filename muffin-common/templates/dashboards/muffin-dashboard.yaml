@@ -308,6 +308,42 @@ data:
                             "value": 543
                         }
                         ]
+                    },
+                    {
+                        "matcher": {
+                        "id": "byName",
+                        "options": "Level"
+                        },
+                        "properties": [
+                        {
+                            "id": "custom.width",
+                            "value": 72
+                        }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                        "id": "byName",
+                        "options": "Body"
+                        },
+                        "properties": [
+                        {
+                            "id": "custom.width",
+                            "value": 642
+                        }
+                        ]
+                    },
+                    {
+                        "matcher": {
+                        "id": "byName",
+                        "options": "TraceId"
+                        },
+                        "properties": [
+                        {
+                            "id": "custom.width",
+                            "value": 125
+                        }
+                        ]
                     }
                     ]
                 },
@@ -328,7 +364,7 @@ data:
                     "sortBy": [
                     {
                         "desc": true,
-                        "displayName": "Time"
+                        "displayName": "TraceId"
                     }
                     ]
                 },
@@ -341,7 +377,7 @@ data:
                     },
                     "direction": "backward",
                     "editorMode": "code",
-                    "expr": "{app=\"muffin-wallet\", level=~\"$level\", traceId=~\".*$traceId.*\"} |= ``",
+                    "expr": "{service_name=\"bighw/muffin-wallet\"}",
                     "queryType": "range",
                     "refId": "A"
                     }
@@ -352,22 +388,27 @@ data:
                     "id": "extractFields",
                     "options": {
                         "delimiter": ",",
-                        "source": "labels"
+                        "format": "json",
+                        "source": "Line"
                     }
                     },
                     {
                     "id": "organize",
                     "options": {
                         "excludeByName": {
-                        "TraceID": false,
+                        "Line": true,
+                        "TraceID": true,
                         "app": true,
                         "detected_level": true,
+                        "flags": true,
                         "id": true,
                         "instance": true,
+                        "instrumentation_scope": true,
                         "job": true,
                         "labelTypes": true,
                         "labels": true,
                         "pod": false,
+                        "resources": true,
                         "service_name": true,
                         "tsNs": true
                         },
@@ -376,19 +417,24 @@ data:
                         "Line": 3,
                         "Time": 1,
                         "TraceID": 7,
-                        "app": 8,
-                        "detected_level": 9,
+                        "body": 8,
+                        "flags": 11,
                         "id": 6,
-                        "instance": 10,
-                        "job": 11,
+                        "instrumentation_scope": 13,
                         "labelTypes": 5,
                         "labels": 0,
-                        "level": 2,
-                        "pod": 12,
-                        "service_name": 13,
+                        "resources": 12,
+                        "severity": 2,
+                        "spanid": 10,
+                        "traceid": 9,
                         "tsNs": 4
                         },
-                        "renameByName": {}
+                        "renameByName": {
+                        "body": "Body",
+                        "severity": "Level",
+                        "spanid": "SpanId",
+                        "traceid": "TraceId"
+                        }
                     }
                     }
                 ],

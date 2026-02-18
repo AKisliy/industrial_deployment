@@ -1,0 +1,71 @@
+apiVersion: opentelemetry.io/v1beta1
+kind: OpenTelemetryCollector
+metadata:
+  name: {{ .Values.observability.collector.name }}
+spec:
+  image: otel/opentelemetry-collector-contrib:0.91.0
+
+  ports:
+    - name: metrics
+      port: 8889
+      protocol: TCP
+      targetPort: 8889
+    - name: grpc-otlp
+      port: 4317
+      protocol: TCP
+      targetPort: 4317
+    - name: http-otlp
+      port: 4318
+      protocol: TCP
+      targetPort: 4318
+
+  config:
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
+
+    processors:
+      batch:
+        timeout: 1s
+        send_batch_size: 1024
+      k8sattributes:
+        passthrough: false
+        extract:
+          metadata:
+            - k8s.namespace.name
+            - k8s.pod.name
+            - k8s.node.name
+            - k8s.container.name
+
+    exporters:
+      zipkin:
+        endpoint: "{{ .Values.observability.tracing.zipkin.url }}/api/v2/spans"
+
+      prometheus:
+        endpoint: "0.0.0.0:8889"
+        resource_to_telemetry_conversion:
+          enabled: true
+
+      loki:
+        endpoint: "{{ .Values.observability.loki.url }}/loki/api/v1/push"
+
+    service:
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [zipkin]
+
+        metrics:
+          receivers: [otlp]
+          processors: [k8sattributes, batch]
+          exporters: [prometheus]
+
+        logs:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [loki]

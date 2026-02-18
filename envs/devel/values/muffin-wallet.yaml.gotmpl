@@ -3,7 +3,7 @@ replicaCount: 1
 image:
   repository: akisliy/muffin-wallet
   pullPolicy: IfNotPresent
-  tag: "1.0"
+  tag: "1.2.0"
 
 nameOverride: ""
 fullnameOverride: ""
@@ -20,7 +20,7 @@ livenessProbe:
     path: /actuator/health/liveness
     port: 8081
     portName: http
-  initialDelaySeconds: 60
+  initialDelaySeconds: 120
   periodSeconds: 5
 readinessProbe:
   httpGet:

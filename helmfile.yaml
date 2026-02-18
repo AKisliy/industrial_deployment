@@ -36,6 +36,8 @@ releases:
     version: "{{ .Values.charts.versions.muffinCurrency }}"
     values:
       - envs/{{ .Environment.Name }}/values/muffin-currency.yaml.gotmpl
+    needs:
+      - muffin-common
   - name: muffin-wallet
     namespace: bighw
     labels:
@@ -45,6 +47,7 @@ releases:
     version: "{{ .Values.charts.versions.muffinWallet }}"
     needs:
       - muffin-currency
+      - muffin-common
     values:
       - envs/{{ .Environment.Name }}/values/muffin-wallet.yaml.gotmpl
   - name: loki
@@ -53,12 +56,12 @@ releases:
     version: "{{ .Values.charts.versions.loki }}"
     values:
       - envs/{{ .Environment.Name }}/values/loki-values.yaml
-  - name: alloy
-    namespace: logging
-    chart: grafana/alloy
-    version: "{{ .Values.charts.versions.alloy }}"
-    values:
-      - envs/{{ .Environment.Name }}/values/alloy-values.yaml
+  # - name: alloy
+  #   namespace: logging
+  #   chart: grafana/alloy
+  #   version: "{{ .Values.charts.versions.alloy }}"
+  #   values:
+  #     - envs/{{ .Environment.Name }}/values/alloy-values.yaml
   - name: grafana
     namespace: logging
     chart: grafana/grafana

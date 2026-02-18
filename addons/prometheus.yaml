@@ -51,6 +51,10 @@ data:
       static_configs:
       - targets:
         - localhost:9090
+    - job_name: collector
+      static_configs:
+      - targets:
+        - muffin-otel-collector-collector.bighw.svc.cluster.local:8889
     - bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
       job_name: kubernetes-apiservers
       kubernetes_sd_configs:

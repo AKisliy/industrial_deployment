@@ -24,26 +24,12 @@ data:
       endpoints:
         web:
           exposure:
-            include: health, info, prometheus
+            include: health, info
       endpoint:
         health:
           probes:
             enabled: true
           show-details: always
-        prometheus:
-          enabled: true
-      metrics:
-        distribution:
-          percentiles-histogram:
-            http:
-              server:
-                requests: true
-      tracing:
-        sampling:
-          probability: 1.0 
-      zipkin:
-        tracing:
-          endpoint: "{{ .Values.observability.zipkin.url }}/api/v2/spans" 
     logging:
       pattern:
-        console: "%d{yyyy-MM-dd HH:mm:ss} %-5level [%X{traceId:-},%X{spanId:-}] %logger{36} - %msg%n"
+        console: "%d{yyyy-MM-dd HH:mm:ss} %-5level [%X{trace_id:-},%X{span_id:-}] %logger{36} - %msg%n"

@@ -9,6 +9,10 @@ gateway:
     - {{ .Values.global.appDomain }}
 
 observability:
+  collector:
+    name: muffin-otel-collector
+  instrumentation:
+    name: muffin-instrumentation
   gateway:
     name: monitoring-gateway
     namespace: istio-system
@@ -37,6 +41,7 @@ observability:
     zipkin:
       namespace: tracing
       host: {{ .Values.global.zipkinDomain }}
+      url: {{ .Values.global.zipkinUrl }}
       virtualService:
         name: zipkin-vs
       service:

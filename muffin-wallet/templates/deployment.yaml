@@ -14,9 +14,7 @@ spec:
       labels:
         {{- include "muffin-wallet.labels" . | nindent 8 }}
       annotations:
-        prometheus.io/scrape: "true"
-        prometheus.io/path: "/actuator/prometheus" 
-        prometheus.io/port: {{ .Values.containerPort | quote }}
+        instrumentation.opentelemetry.io/inject-java: "true" 
     spec:
       serviceAccountName: {{ .Values.serviceAccount.name | default "default" }}
       containers:
